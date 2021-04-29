@@ -23,7 +23,11 @@ const pool = require('pg');
 
 const getUserWithEmail = function(email) {
   pool
-    .query(`SELECT email FROM users WHERE email = $1`, [email])
+    .query(`
+    SELECT email 
+    FROM users 
+    WHERE email = $1;`,
+    [email])
     .then((result) => result.rows[0])
     .catch((err) => null);
 };
@@ -37,7 +41,11 @@ exports.getUserWithEmail = getUserWithEmail;
  */
 const getUserWithId = function(id) {
   pool
-    .query(`SELECT id FROM users WHERE id = $1`, [id])
+    .query(`
+    SELECT id 
+    FROM users 
+    WHERE id = $1;`,
+    [id])
     .then((result) => result.rows[0])
     .catch((err) => null);
 };
@@ -50,12 +58,24 @@ exports.getUserWithId = getUserWithId;
  * @param {{name: string, password: string, email: string}} user
  * @return {Promise<{}>} A promise to the user.
  */
-const addUser =  function(user) {
-  const userId = Object.keys(users).length + 1;
-  user.id = userId;
-  users[userId] = user;
-  return Promise.resolve(user);
+// const addUser =  function(user) {
+//   const userId = Object.keys(users).length + 1;
+//   user.id = userId;
+//   users[userId] = user;
+//   return Promise.resolve(user);
+// };
+
+const addUser = function(user) {
+  pool
+    .query(`
+    INSERT INTO users (name, email, password) 
+    VALUES($1, $2, $3)
+    RETURNING *;`,
+    [user.name, user.email, user.password])
+    .then((result) => result.rows[0])
+    .catch((err) => null);
 };
+
 exports.addUser = addUser;
 
 /// Reservations
@@ -81,9 +101,13 @@ exports.getAllReservations = getAllReservations;
 
 const getAllProperties = (options, limit = 10) => {
   pool
-  .query(`SELECT * FROM properties LIMIT $1`, [limit])
-  .then((result) => console.log('Results from this query: ', result.rows))
-  .catch((err) => console.log('An Error Occurred: ', err.message));
+    .query(`
+  SELECT * 
+  FROM properties 
+  LIMIT $1;`,
+    [limit])
+    .then((result) => console.log('Results from this query: ', result.rows))
+    .catch((err) => console.log('An Error Occurred: ', err.message));
 };
 
 exports.getAllProperties = getAllProperties;
