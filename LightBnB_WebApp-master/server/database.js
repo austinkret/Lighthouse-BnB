@@ -17,16 +17,16 @@ const pool = new Pool({
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithEmail = function(email) {
-  pool
+  return pool
     .query(`
-    SELECT email
+    SELECT *
     FROM users
     WHERE email = $1;`,
     [email])
     .then((result) => {
-      result.rows[0];
+      return result.rows[0];
     })
-    .catch((err) => null);
+    .catch((err) => console.log('error', err));
 };
 exports.getUserWithEmail = getUserWithEmail;
 
@@ -36,14 +36,14 @@ exports.getUserWithEmail = getUserWithEmail;
  * @return {Promise<{}>} A promise to the user.
  */
 const getUserWithId = function(id) {
-  pool
+  return pool
     .query(`
-    SELECT id
+    SELECT *
     FROM users
     WHERE id = $1;`,
     [id])
     .then((result) => {
-      result.rows[0];
+      return result.rows[0];
     })
     .catch((err) => null);
 };
@@ -56,14 +56,14 @@ exports.getUserWithId = getUserWithId;
  * @return {Promise<{}>} A promise to the user.
  */
 const addUser = function(user) {
-  pool
+  return pool
     .query(`
     INSERT INTO users (name, email, password)
     VALUES($1, $2, $3)
     RETURNING *;`,
     [user.name, user.email, user.password])
     .then((result) => {
-      result.rows[0];
+      return result.rows[0];
     })
     .catch((err) => null);
 };
