@@ -119,39 +119,49 @@ const getAllProperties = function(options, limit = 10) {
     
     if (options.city) {
       queryString += `AND properties.owner_id = $${queryParams.length}`;
+    } else {
+      queryString += `WHERE properties.owner_id = $${queryParams.length}`;
     }
-    queryString += `WHERE properties.owner_id = $${queryParams.length}`;
   }
 
   if (options.minimum_price_per_night) {
-    queryParams.push(`${options.minimum_price_per_night}`);
+    queryParams.push(`${options.minimum_price_per_night * 100}`);
 
     if (options.city || options.owner_id) {
       queryString += `AND properties.cost_per_night >= $${queryParams.length}`;
+    } else {
+      queryString += `WHERE properties.cost_per_night >= $${queryParams.length}`;
     }
-    queryString += `WHERE properties.cost_per_night >= $${queryParams.length}`;
   }
 
   if (options.maximum_price_per_night) {
-    queryParams.push(`${options.maximum_price_per_night}`);
+    queryParams.push(`${options.maximum_price_per_night * 100}`);
 
     if (options.city || options.owner_id || options.minimum_price_per_night) {
       queryString += `AND properties.cost_per_night <= $${queryParams.length}`;
+    } else {
+      queryString += `WHERE properties.cost_per_night <= $${queryParams.length}`;
     }
-    queryString += `WHERE properties.cost_per_night <= $${queryParams.length}`;
   }
-
-  queryString += `GROUP BY properties.id`;
-
+  
   if (options.minimum_rating) {
     queryParams.push(`${options.minimum_rating}`);
-    queryString += `HAVING AVG(property_reviews.rating) >= $${queryParams.length}`;
+    queryString += `GROUP BY properties.id HAVING AVG(property_reviews.rating) >= $${queryParams.length}`;
   }
   
   queryParams.push(limit);
-  queryString += `
-  ORDER BY cost_per_night 
-  LIMIT $${queryParams.length};`;
+  if (options.minimum_rating) {
+    queryString += `
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length};
+    `;
+  } else {
+    queryString += `
+    GROUP BY properties.id
+    ORDER BY cost_per_night
+    LIMIT $${queryParams.length};
+    `;
+  }
 
   return pool.query(queryString, queryParams)
     .then((result) => {
